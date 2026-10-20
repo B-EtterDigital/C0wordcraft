@@ -9,6 +9,9 @@ publish = false
 [lints]
 workspace = true
 
+[features]
+page-control = ["rfd/file-handle-inner"]
+
 [[bin]]
 name = "wordcraft-web"
 path = "src/main.rs"

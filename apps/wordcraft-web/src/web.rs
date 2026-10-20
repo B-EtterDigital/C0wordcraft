@@ -38,7 +38,10 @@ pub fn start() {
         {
             create.instance_descriptor.backends = eframe::wgpu::Backends::GL;
         }
-        let result = eframe::WebRunner::new()
+        let runner = eframe::WebRunner::new();
+        #[cfg(feature = "page-control")]
+        crate::page_control::runner(&runner);
+        let result = runner
             .start(
                 canvas,
                 options,
@@ -79,6 +82,8 @@ pub fn start() {
                     if !sample {
                         app.start_screen();
                     }
+                    #[cfg(feature = "page-control")]
+                    let app = crate::page_control::attach(app, &cc.egui_ctx);
                     Ok(Box::new(WebShell { app, inbox, messages, prefs }))
                 }),
             )
@@ -261,7 +266,7 @@ fn services(inbox: Inbox, ctx: egui::Context, dirty: Rc<Cell<bool>>, saves: Asyn
 }
 
 /// Most files one multi-select pick (Add Font) reads.
-const MAX_PICKED_FILES: usize = 2000;
+pub(crate) const MAX_PICKED_FILES: usize = 2000;
 /// Most bytes of picked fonts held in the inbox before the app drains them.
 const MAX_PENDING_PICKED_BYTES: usize = 256 << 20;
 /// Most local fonts one Load System Installed Fonts installs (a designer's machine has thousands).

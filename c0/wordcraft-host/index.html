@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>C0doc</title>
+  <link data-trunk rel="rust" href="../../apps/wordcraft-web/Cargo.toml" data-bin="wordcraft-web" data-cargo-features="page-control" data-wasm-opt="z" data-weak-refs />
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+    #wordcraft_canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    #wordcraft_loading { display: none; }
+  </style>
+  <script>
+    // Match PhotoCraft: the host sees undefined until the guest installs its bridge.
+    Object.defineProperty(window, '__c0hostRequest', { get: () => window.__wordcraftControl });
+  </script>
+</head>
+<body>
+  <canvas id="wordcraft_canvas"></canvas>
+  <div id="wordcraft_loading"></div>
+</body>
+</html>

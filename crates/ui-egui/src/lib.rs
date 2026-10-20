@@ -25,6 +25,7 @@ pub mod a11y_pane;
 pub mod async_saves;
 pub mod autoscroll;
 pub mod backstage;
+pub mod c0_host;
 pub mod canvas;
 pub mod caret_glide;
 pub mod chrome;
@@ -242,6 +243,11 @@ pub struct UiState {
     /// Toolbar takes it away; Show Quick Access Toolbar (the ribbon's right-click menu, Customize
     /// Ribbon › Quick Access Toolbar) brings it back. Kept between runs.
     pub quick_access_toolbar: bool,
+    /// Host chrome switches; absent settings keep the standalone interface.
+    #[serde(default = "c0_host::default_on", skip_serializing)]
+    pub title_bar: bool,
+    #[serde(default = "c0_host::default_on", skip_serializing)]
+    pub community_links: bool,
     pub recent: Vec<String>,
     /// Symbols inserted from the Symbol dialog, most recent first (#321).
     pub recent_symbols: Vec<dialogs_insert::RecentSymbol>,
@@ -362,6 +368,8 @@ impl Default for UiState {
             print: print_page::PrintSettings::default(),
             ribbon_collapsed: false,
             quick_access_toolbar: true,
+            title_bar: true,
+            community_links: true,
             recent: Vec::new(),
             recent_symbols: Vec::new(),
             recent_colors: Vec::new(),
@@ -1455,6 +1463,9 @@ impl WordApp {
 
     /// Commands that live in the UI layer.
     fn ui_command(&mut self, id: &str, p: &Value) -> Option<Result<Value, String>> {
+        if let Some(r) = c0_host::ui_command(self, id, p) {
+            return Some(r);
+        }
         let s = |k: &str| p.get(k).and_then(Value::as_str);
         Some(Ok(match id {
             "ui.tab" => {
@@ -2605,6 +2616,8 @@ pub(crate) fn works_without_document(id: &str) -> bool {
             | "ui.closeDialog"
             | "ui.collapseRibbon"
             | "ui.quickAccessToolbar"
+            | "ui.titleBar"
+            | "ui.communityLinks"
             | "ui.keytips"
             | "ui.dark"
             | "ui.theme"

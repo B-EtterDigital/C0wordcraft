@@ -2,6 +2,8 @@
 
 use std::sync::Arc;
 
+pub mod host;
+
 use egui::{Align2, Color32, CornerRadius, FontData, FontDefinitions, FontFamily, FontId, Rect, Stroke, Visuals};
 
 /// WordCraft's app colour (and its darker ink for text on light backgrounds).
@@ -426,7 +428,7 @@ impl Tokens {
         }
     }
     pub fn get(ctx: &egui::Context) -> Tokens {
-        if ctx.global_style().visuals.dark_mode { Tokens::dark() } else { Tokens::light() }
+        host::resolve(ctx, if ctx.global_style().visuals.dark_mode { Tokens::dark() } else { Tokens::light() })
     }
 }
 
@@ -707,6 +709,7 @@ fn tracked_job(text: &str, font: &FontId, tracking: f32, color: Color32) -> egui
 pub fn apply(ctx: &egui::Context, appearance: Appearance) {
     ctx.set_visuals_of(egui::Theme::Light, visuals(&Tokens::light()));
     ctx.set_visuals_of(egui::Theme::Dark, visuals(&Tokens::dark()));
+    host::apply(ctx);
     ctx.all_styles_mut(|s| {
         s.spacing.item_spacing = egui::vec2(6.0, 4.0);
         s.spacing.button_padding = egui::vec2(8.0, 3.0);

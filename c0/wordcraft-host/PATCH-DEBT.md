@@ -17,12 +17,12 @@ It is not a net line count. New files and everything under `c0/` are excluded.
 | `crates/ui-egui/src/control.rs` | 1 | One `c0.*` dispatch arm | All host requests use the real control queue | Not yet (fork namespace) |
 | `crates/ui-egui/src/chrome.rs` | 4 | Return when the title row is hidden (3); gate the Discord pill (1 replaced) | The host owns its title and community chrome | Not yet (generic switches) |
 | `crates/ui-egui/src/backstage.rs` | 3 | Skip the existing Discord footer entry when community links are hidden | Keep About while suppressing promotion | Not yet (generic switch) |
-| `crates/ui-egui/src/ribbon.rs` | 3 | Guard the existing Help > Community Discord button (1 replaced, 2 braces) | Hide the entry without changing the Help tab | Not yet (generic switch) |
+| `crates/ui-egui/src/ribbon.rs` | 10 | Guard the existing Help > Community Discord button (1 replaced, 2 braces); web build only: drop the Zotero tab (1 replaced) and the Home > Voice group with Dictate (comment, guard, brace, 3 re-indented) | Hide the entry without changing the Help tab; neither the Zotero desktop link nor dictation works in a browser | Not yet (the web-build guards are offerable as is) |
 | `crates/ui-egui/src/dialogs.rs` | 1 | Delegate the existing promotional About block to the new host helper | Retain WordCraft, authors and license while hiding promotion; avoid re-indentation debt | Not yet (generic switch) |
 | `crates/ui-egui/src/theme.rs` | 4 | Declare `theme::host` (2 including spacing), resolve the tokens at the single getter (1 replaced), reapply host widget visuals when upstream reapplies appearance (1) | Context-local palette overrides survive every frame and theme change | Not yet (generic theme seam) |
 
-Total: 43 added lines in 12 modified upstream files, including replacements.
-Ratchet: 43
+Total: 50 added lines in 12 modified upstream files, including replacements.
+Ratchet: 50
 
 The About helper reduces the inherited patch by eight added lines; the lockfile adds one.
 

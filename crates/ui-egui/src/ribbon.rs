@@ -279,7 +279,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     // Format) may be stored while the selection moved away, and a tab may have been hidden.
     let user_tabs = app.session.ribbon.tabs().into_owned();
     let mut tabs: Vec<(String, bool)> = vec![("File".to_string(), false)];
-    tabs.extend(user_tabs.iter().filter(|e| !e.hidden).map(|e| (e.name.clone(), e.custom)));
+    tabs.extend(user_tabs.iter().filter(|e| !e.hidden && !(cfg!(target_arch = "wasm32") && e.name == "Zotero")).map(|e| (e.name.clone(), e.custom)));
     for ct in contextual_tabs(&app.session) {
         if ct == "Outlining" {
             tabs.insert(1.min(tabs.len()), (ct.to_string(), false));
@@ -1207,9 +1207,12 @@ fn home(app: &mut WordApp, ui: &mut Ui) {
             });
         });
     });
-    group(ui, "Voice", None, app, |ui, app| {
-        big(ui, app, "dictate", "Dictate", "tools.dictate", json!({}), false);
-    });
+    // C0: no microphone path in the web build.
+    if !cfg!(target_arch = "wasm32") {
+        group(ui, "Voice", None, app, |ui, app| {
+            big(ui, app, "dictate", "Dictate", "tools.dictate", json!({}), false);
+        });
+    }
     group(ui, "Editor", None, app, |ui, app| {
         big(ui, app, "editor", "Editor", "review.spelling", json!({}), false);
     });

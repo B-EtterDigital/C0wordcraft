@@ -12,17 +12,18 @@ pub(super) fn document_bytes(app: &WordApp, params: &Value) -> Result<Value, Str
     if !app.has_document() {
         return Err("no document is open".into());
     }
-    if params.get("format").is_some_and(|v| v.as_str() != Some("docx")) {
-        return Err("format must be docx".into());
-    }
-    let name = format!("{}.docx", app.title_stem());
+    let format = match params.get("format") {
+        None => "docx",
+        Some(v) => ["docx", "pdf"].into_iter().find(|f| v.as_str() == Some(f)).ok_or("format must be docx or pdf")?,
+    };
+    let name = format!("{}.{format}", app.title_stem());
     let password = app.session.password.as_ref().map(wordcraft_engine::Password::as_str);
     let opts = wordcraft_engine::cmd::file::export_options(&app.session, &json!({}));
     let bytes = wordcraft_engine::io::save_bytes_with(&name, &app.session.doc, password, &opts)?;
     if bytes.len() > MAX_FILE_BYTES {
         return Err("document exceeds the host file limit".into());
     }
-    Ok(json!({"name": name, "format": "docx", "bytes": STANDARD.encode(bytes), "revision": app.session.rev()}))
+    Ok(json!({"name": name, "format": format, "bytes": STANDARD.encode(bytes), "revision": app.session.rev()}))
 }
 
 pub(super) fn open(app: &mut WordApp, ctx: &egui::Context, params: &Value) -> Result<Value, String> {

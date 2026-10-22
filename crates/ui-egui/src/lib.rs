@@ -2236,7 +2236,7 @@ impl WordApp {
             if !self.session.view.focus_mode {
                 ribbon::show(self, ui);
                 chrome::status_bar(self, ui);
-                panes::show(self, ui);
+                c0_host::chrome::panes(self, ui);
             }
             egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.canvas)).show(ui, |ui| {
                 canvas::show(self, ui);

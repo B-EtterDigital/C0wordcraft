@@ -1,6 +1,6 @@
 //! Per-key host settings reports. Pane commands retain WordCraft's view semantics.
 
-use crate::{WordApp, theme::host};
+use crate::{WordApp, c0_host::chrome, theme::host};
 use serde_json::{Value, json};
 
 pub(super) fn set(app: &mut WordApp, ctx: &egui::Context, params: &Value) -> Result<Value, String> {
@@ -45,7 +45,8 @@ pub(super) fn set(app: &mut WordApp, ctx: &egui::Context, params: &Value) -> Res
                 "navigation_pane" => "view.navigationPane",
                 "styles_pane" => "view.stylesPane",
                 "comments_pane" => "view.commentsPane",
-                "ribbon_collapsed" => "ui.collapseRibbon",
+                "ribbon_collapsed" | "toolbar" => "ui.collapseRibbon",
+                "toolbar_double" | "toolbar_floating" | "right_dock_collapsed" => "",
                 _ => {
                     unknown.push(key);
                     continue;
@@ -55,8 +56,16 @@ pub(super) fn set(app: &mut WordApp, ctx: &egui::Context, params: &Value) -> Res
                 invalid.push(key);
                 continue;
             };
-            let r = if key == "ribbon_collapsed" {
-                if app.ui.ribbon_collapsed == on { Ok(json!({})) } else { app.execute(command, json!({})) }
+            let r = if matches!(key.as_str(), "ribbon_collapsed" | "toolbar") {
+                // `toolbar` is the ribbon body shown: the inverse of the collapsed state.
+                if app.ui.ribbon_collapsed == (on == (key == "ribbon_collapsed")) { Ok(json!({})) } else { app.execute(command, json!({})) }
+            } else if command.is_empty() {
+                match key.as_str() {
+                    "toolbar_double" => chrome::update(ctx, |c| c.compact = on),
+                    "toolbar_floating" => chrome::update(ctx, |c| c.floating = on),
+                    _ => chrome::set_dock_folded(app, ctx, on),
+                }
+                Ok(json!({}))
             } else if command.starts_with("view.") && !app.has_document() {
                 app.session.run(command, &json!({"value": on})).map_err(|e| e.to_string())
             } else {

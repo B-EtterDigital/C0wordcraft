@@ -223,7 +223,11 @@ fn document_bytes_roundtrip_is_read_only_and_uses_the_importer() {
     assert_eq!(reopened.session.doc.plain_text(StoryRef::Body), app.session.doc.plain_text(StoryRef::Body));
     assert!(!reopened.session.dirty);
     assert!(!reopened.ui.backstage);
-    assert_eq!(call(&mut app, &ctx, "c0.documentBytes", json!({"format":"pdf"}))["ok"], false);
+    let pdf = ok(&mut app, &ctx, "c0.documentBytes", json!({"format":"pdf"}));
+    assert_eq!((pdf["format"].as_str(), pdf["name"].as_str().map(|n| n.ends_with(".pdf"))), (Some("pdf"), Some(true)));
+    assert!(STANDARD.decode(pdf["bytes"].as_str().unwrap()).unwrap().starts_with(b"%PDF-"));
+    assert_eq!((app.session.rev(), app.session.dirty), (before.0, before.1), "the PDF snapshot is read-only too");
+    assert_eq!(call(&mut app, &ctx, "c0.documentBytes", json!({"format":"txt"}))["ok"], false);
 }
 
 fn super_app() -> WordApp {

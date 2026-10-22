@@ -133,7 +133,7 @@ pub fn begin(ctx: &Context, tab: &str, avail: f32) {
             .collect();
         (titles, groups)
     });
-    let levels = if groups.iter().all(|g| g.widths[0].is_some()) { plan(&groups, avail) } else { Vec::new() };
+    let levels = crate::c0_host::chrome::levels(ctx, groups, titles.len(), avail);
     ctx.data_mut(|d| {
         d.insert_temp(frame_id(), Frame { tab: tab.to_string(), titles, levels, drawn: Vec::new() });
         d.insert_temp(active_id(), true);

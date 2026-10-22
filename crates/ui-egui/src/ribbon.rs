@@ -475,12 +475,13 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     if app.ui.ribbon_collapsed {
         return;
     }
+    let mut float = crate::c0_host::chrome::float(ui);
     egui::Panel::top("ribbon")
         .exact_size(CONTENT_H + LABEL_H + 10.0)
         .frame(
             egui::Frame::NONE.fill(t.ribbon).inner_margin(egui::Margin { left: 8, right: 8, top: 4, bottom: 4 }).stroke(Stroke::new(1.0, t.border)),
         )
-        .show(ui, |ui| {
+        .show(float.as_mut().unwrap_or(ui), |ui| {
             // Right-click on the ribbon (outside a button): Customize Ribbon. Registered first, so
             // the buttons drawn over it keep their own clicks.
             // No document open (#1129): every command is greyed out but Help's.

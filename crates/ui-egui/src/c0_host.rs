@@ -1,8 +1,10 @@
 //! C0VIBE's WordCraft guest contract. All document changes use WordCraft commands.
 
+mod c0_chrome;
 mod c0_files;
 mod c0_panels;
 pub use c0_files::begin_picker;
+pub(crate) use c0_chrome as chrome;
 
 use serde_json::{Value, json};
 use wordcraft_doc::{Block, Pos, StoryRef};
@@ -76,13 +78,16 @@ fn inspect(app: &mut WordApp, ctx: &egui::Context) -> Value {
     } else {
         Vec::new()
     };
+    let chrome = chrome::get(ctx);
     let pages = if present { app.session.layout().pages.len() } else { 0 };
     json!({
         "title": app.title_stem(), "dirty": app.session.dirty, "revision": app.session.rev(),
         "pages": pages, "words": if present { app.session.doc.word_count() } else { 0 },
         "canUndo": present && app.session.can_undo(), "canRedo": present && app.session.can_redo(), "outline": outline,
         "panes": {"ruler": app.session.view.ruler, "navigation": app.session.view.nav_pane,
-                  "styles": app.session.view.styles_pane, "comments": app.session.view.comments_pane},
+                  "styles": app.session.view.styles_pane, "comments": app.session.view.comments_pane,
+                  "toolbar": !app.ui.ribbon_collapsed, "toolbar_double": chrome.compact, "toolbar_floating": chrome.floating,
+                  "right_dock_collapsed": chrome.dock_folded},
         "ribbonCollapsed": app.ui.ribbon_collapsed, "startScreen": app.ui.start_screen, "theme": app.ui.theme.code(),
         "fileDialog": app.file_dialog_open() || c0_files::picker_pending(ctx), "titleBar": app.ui.title_bar, "communityLinks": app.ui.community_links,
     })

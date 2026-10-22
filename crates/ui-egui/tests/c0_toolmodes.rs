@@ -60,6 +60,10 @@ fn draw(app: &mut WordApp, ctx: &egui::Context, width: f32) -> Vec<(String, egui
     drawn
 }
 
+fn count(drawn: &[(String, egui::Pos2)], text: &str) -> usize {
+    drawn.iter().filter(|(t, _)| t == text).count()
+}
+
 fn find<'a>(drawn: &'a [(String, egui::Pos2)], text: &str) -> Option<&'a egui::Pos2> {
     drawn.iter().find(|(t, _)| t == text).map(|(_, p)| p)
 }
@@ -105,7 +109,7 @@ fn unknown_and_invalid_keys_are_reported_and_siblings_apply() {
     let (mut app, ctx) = (app(), egui::Context::default());
     let r = set(&mut app, &ctx, json!({"toolbar_triple": true, "toolbar_floating": "yes", "right_dock_collapsed": 1, "toolbar_double": true}));
     assert_eq!(r["unknown"], json!(["panels.toolbar_triple"]));
-    assert_eq!(r["invalid"], json!(["panels.right_dock_collapsed", "panels.toolbar_floating"]).as_array().map(|a| json!([a[1], a[0]])).unwrap());
+    assert_eq!(r["invalid"], json!(["panels.right_dock_collapsed", "panels.toolbar_floating"]));
     assert_eq!(r["applied"], json!(["panels.toolbar_double"]));
     assert_eq!(panes(&mut app, &ctx)["toolbar_floating"], false);
 }
@@ -114,7 +118,7 @@ fn unknown_and_invalid_keys_are_reported_and_siblings_apply() {
 fn modes_are_not_saved_to_preferences() {
     let (mut app, ctx) = (app(), egui::Context::default());
     set(&mut app, &ctx, json!({"toolbar_double": true, "toolbar_floating": true, "right_dock_collapsed": true}));
-    let saved = serde_json::to_string(app.prefs()).unwrap();
+    let saved = serde_json::to_string(&app.prefs()).unwrap();
     for key in ["toolbar_double", "toolbarDouble", "toolbar_floating", "toolbarFloating", "right_dock", "rightDock"] {
         assert!(!saved.contains(key), "{key} leaked into preferences");
     }
@@ -167,17 +171,20 @@ fn folded_dock_hides_right_panes_and_unfolds_when_one_opens() {
     let (mut app, ctx) = (app(), egui::Context::default());
     set(&mut app, &ctx, json!({"comments_pane": true}));
     let open = draw(&mut app, &ctx, 1500.0);
-    assert!(find(&open, "Comments").is_some(), "the pane draws its header");
+    // The title bar has its own Comments button; the pane's header is the extra one.
+    let with_header = count(&open, "Comments");
+    assert!(with_header >= 2, "the pane draws its header");
     set(&mut app, &ctx, json!({"right_dock_collapsed": true}));
     let folded = draw(&mut app, &ctx, 1500.0);
-    assert!(find(&folded, "Comments").is_none(), "folded to the strip");
+    assert_eq!(count(&folded, "Comments"), with_header - 1, "folded to the strip");
     assert!(app.session.view.comments_pane, "folding does not close the pane");
     assert_eq!(panes(&mut app, &ctx)["right_dock_collapsed"], true);
     // A pane opened while folded unfolds the dock; the one already open stays open.
     set(&mut app, &ctx, json!({"styles_pane": true}));
     let unfolded = draw(&mut app, &ctx, 1500.0);
     assert_eq!(panes(&mut app, &ctx)["right_dock_collapsed"], false);
-    assert!(find(&unfolded, "Comments").is_some() && find(&unfolded, "Styles").is_some());
+    assert_eq!(count(&unfolded, "Comments"), with_header);
+    assert!(count(&unfolded, "Styles") >= 1);
     set(&mut app, &ctx, json!({"right_dock_collapsed": false}));
     assert_eq!(draw(&mut app, &ctx, 1500.0).len(), unfolded.len(), "unfolded draws as upstream");
 }

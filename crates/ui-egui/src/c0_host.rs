@@ -1,6 +1,6 @@
 //! C0VIBE's WordCraft guest contract. All document changes use WordCraft commands.
 
-mod c0_chrome;
+pub(crate) mod c0_chrome;
 mod c0_files;
 mod c0_panels;
 pub use c0_files::begin_picker;

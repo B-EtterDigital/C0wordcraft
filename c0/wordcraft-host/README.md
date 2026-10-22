@@ -62,7 +62,7 @@ body, not page numbers, and can change after edits. Refresh the outline when `re
 |---|---|---|
 | `c0.inspect` | `{}` | `{title, dirty, revision, pages, words, canUndo, canRedo, outline, panes, ribbonCollapsed, startScreen, theme, titleBar, communityLinks, fileDialog}` |
 | `c0.goToBlock` | `{block}` | `{block}`; moves the caret to that body paragraph or a table's first paragraph, focuses the page and uses the Navigation pane's scroll policy |
-| `c0.documentBytes` | `{format?: "docx"}` | `{name, format:"docx", bytes, revision}`; a base64 snapshot using File > Save's DOCX writer, export options and document password |
+| `c0.documentBytes` | `{format?: "docx"\|"pdf"}` | `{name, format, bytes, revision}`; a base64 snapshot using File > Save's writer for that format (DOCX with export options and document password; PDF from the engine's own PDF writer, never encrypted) |
 | `c0.openFile` | `{name, bytes}` | The normal `file.open` result, normally `{path, paragraphs, words, encrypted}`, or `{pending:"saveChanges"}` |
 | `c0.newDocument` | `{template?: string}` | `{anchor,focus}` (WordCraft selection positions), or `{pending:"saveChanges"}`; blank by default, closes Backstage, never opens a start screen |
 | `c0.cancelFileDialog` | `{}` | `{cancelled}`; false if no picker request or app file-dialog continuation was pending |
@@ -73,7 +73,7 @@ body, not page numbers, and can change after edits. Refresh the outline when `re
 document open. `outline` contains nonempty body paragraph headings in document order:
 `{level,text,block}`, where Title is level 0 and Heading 1–9 are levels 1–9. Resolved outline styles
 are supported; TOC styles are excluded. Headings inside tables, text boxes, headers and footers
-are not exposed as integer body paragraph entries. `panes` is `{ruler,navigation,styles,comments}`.
+are not exposed as integer body paragraph entries. `panes` is `{ruler,navigation,styles,comments,toolbar,toolbar_double,toolbar_floating,right_dock_collapsed}`.
 `startScreen` reports the startup preference; `fileDialog` reports an outstanding picker request.
 `theme` is `light`, `dark` or `system`. The extra `titleBar` and `communityLinks` fields report the
 two host chrome switches, which are intentionally omitted from persisted preferences.
@@ -107,7 +107,7 @@ A valid `c0.openFile` or `c0.newDocument` supersedes an older open-picker reques
 
 ## Chrome settings
 
-`c0.set {panels:{...}}` accepts the following boolean keys. Each known valid key is in `applied`;
+The four mode keys are held in the page, never saved to preferences. `c0.set {panels:{...}}` accepts the following boolean keys. Each known valid key is in `applied`;
 unknown names are in `unknown`, known names with non-boolean values in `invalid`. A bad key does
 not prevent good siblings from applying. A malformed container returns an error before changes.
 Setting the same value twice is idempotent, including `ribbon_collapsed`.
@@ -122,6 +122,10 @@ Setting the same value twice is idempotent, including `ribbon_collapsed`.
 | `navigation_pane` | `view.navigationPane` |
 | `styles_pane` | `view.stylesPane` |
 | `comments_pane` | `view.commentsPane` |
+| `toolbar` | The ribbon body shown (default true); false is the ribbon collapsed to its tabs, the inverse of `ribbon_collapsed`. The tab strip is never removed |
+| `toolbar_double` | Compact single row: every ribbon group at its compact level (small buttons without labels, shorter Styles gallery), collapsing to drop-downs only when even that is too wide. Default false |
+| `toolbar_floating` | The ribbon body in a movable strip over the page (drag its grip), tabs stay docked. Default false; combines with `toolbar_double` |
+| `right_dock_collapsed` | Fold the right-hand panes (Styles, Style Inspector, Accessibility, Alt Text, Restrict Editing, Comments) to a 34-point icon strip; an icon opens its pane and unfolds, as does opening any pane by command. Panes stay open while folded. Default false |
 
 No `status_bar` switch is added: it is reported as unknown. About always retains WordCraft's name,
 version, authors/copyright and MIT OR Apache-2.0 license. Existing `show_discord` still independently
@@ -186,7 +190,7 @@ if heavy is refused, use `smoac-slot run gate 3 3600`. At most two Cargo invocat
 may run at once. The slot wrapper may require gate admission for verification too.
 
 ```sh
-cargo test -p wordcraft-ui-egui --test c0_host_contract --test c0_chrome --test c0_control_passes
+cargo test -p wordcraft-ui-egui --test c0_host_contract --test c0_chrome --test c0_control_passes --test c0_toolmodes
 cargo test -p wordcraft-web --features page-control
 cargo check --target wasm32-unknown-unknown -p wordcraft-web --features page-control
 cargo xtask ci

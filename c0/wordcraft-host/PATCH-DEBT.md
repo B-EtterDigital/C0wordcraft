@@ -13,16 +13,17 @@ It is not a net line count. New files and everything under `c0/` are excluded.
 | `apps/wordcraft-web/src/main.rs` | 2 | Declare `page_control` for wasm and native tests when the feature is enabled | Keep native feature tests compiled (K-41) | Not yet |
 | `apps/wordcraft-web/src/web.rs` | 7 | Name/pass the WebRunner (4 added, 1 replaced); attach the bridge (2); expose the existing picker file-count cap to the page picker (1 replaced) | Answer requests without presentation and preserve the upstream count limit | Not yet (generic attachment seams) |
 | `crates/ui-egui/Cargo.toml` | 1 | Existing workspace base64 dependency | Strict file payload validation in the host module | Not yet |
-| `crates/ui-egui/src/lib.rs` | 13 | Declare `c0_host` (1); two default-true, non-persisted UiState fields (5), their defaults (2), UI command helper seam (3), allow those commands with no document (2) | Host title/community switches in the existing state and command path | Not yet (generic embeddability switches/seam) |
+| `crates/ui-egui/src/lib.rs` | 14 | Declare `c0_host` (1); two default-true, non-persisted UiState fields (5), their defaults (2), UI command helper seam (3), allow those commands with no document (2); the side-pane call goes through the host dock wrapper (1 replaced) | Host title/community switches in the existing state and command path | Not yet (generic embeddability switches/seam) |
 | `crates/ui-egui/src/control.rs` | 1 | One `c0.*` dispatch arm | All host requests use the real control queue | Not yet (fork namespace) |
 | `crates/ui-egui/src/chrome.rs` | 4 | Return when the title row is hidden (3); gate the Discord pill (1 replaced) | The host owns its title and community chrome | Not yet (generic switches) |
 | `crates/ui-egui/src/backstage.rs` | 3 | Skip the existing Discord footer entry when community links are hidden | Keep About while suppressing promotion | Not yet (generic switch) |
-| `crates/ui-egui/src/ribbon.rs` | 10 | Guard the existing Help > Community Discord button (1 replaced, 2 braces); web build only: drop the Zotero tab (1 replaced) and the Home > Voice group with Dictate (comment, guard, brace, 3 re-indented) | Hide the entry without changing the Help tab; neither the Zotero desktop link nor dictation works in a browser | Not yet (the web-build guards are offerable as is) |
+| `crates/ui-egui/src/ribbon.rs` | 12 | Guard the existing Help > Community Discord button (1 replaced, 2 braces); web build only: drop the Zotero tab (1 replaced) and the Home > Voice group with Dictate (comment, guard, brace, 3 re-indented) | Hide the entry without changing the Help tab; neither the Zotero desktop link nor dictation works in a browser | Not yet (the web-build guards are offerable as is) |
+| `crates/ui-egui/src/ribbon_fit.rs` | 1 | The fit plan comes from the host helper (1 replaced; identical result at the default) | Compact-row tool mode forces every group to its compact level | Not yet (generic switch) |
 | `crates/ui-egui/src/dialogs.rs` | 1 | Delegate the existing promotional About block to the new host helper | Retain WordCraft, authors and license while hiding promotion; avoid re-indentation debt | Not yet (generic switch) |
 | `crates/ui-egui/src/theme.rs` | 4 | Declare `theme::host` (2 including spacing), resolve the tokens at the single getter (1 replaced), reapply host widget visuals when upstream reapplies appearance (1) | Context-local palette overrides survive every frame and theme change | Not yet (generic theme seam) |
 
-Total: 50 added lines in 12 modified upstream files, including replacements.
-Ratchet: 50
+Total: 54 added lines in 13 modified upstream files, including replacements.
+Ratchet: 54
 
 The About helper reduces the inherited patch by eight added lines; the lockfile adds one.
 
@@ -33,9 +34,9 @@ roadmap or Word-parity score is changed: this integration adds an embedding tran
 
 - `c0/wordcraft-host/`: the page, build configuration and handback documentation.
 - `apps/wordcraft-web/src/page_control.rs` and `page_control/{bridge,files}.rs`.
-- `crates/ui-egui/src/c0_host.rs` and `c0_host/c0_{files,panels}.rs`.
+- `crates/ui-egui/src/c0_host.rs` and `c0_host/c0_{files,panels,chrome}.rs`.
 - `crates/ui-egui/src/theme/host.rs`.
-- `crates/ui-egui/tests/c0_{host_contract,chrome,control_passes}.rs`.
+- `crates/ui-egui/tests/c0_{host_contract,chrome,control_passes,toolmodes}.rs`.
 
 ## Couplings without an edited line: re-check on every upstream pull
 
@@ -56,3 +57,4 @@ roadmap or Word-parity score is changed: this integration adds an embedding tran
 The optional page picker tracks only open-picker requests. A native browser-owned chooser cannot
 be closed by the page; cancelling its request prevents any later answer from importing a file.
 Browser save tickets and the Save Changes prompt keep their existing lifecycle.
+| `c0_host/c0_chrome.rs` | `ribbon::show` panel call, `ribbon_fit::begin` plan, `panes::show` right-hand panels, `WordApp::session.view` pane flags and `restrict.open` | Rendered tests per mode; the folded dock hides the right panes by clearing their flags around `panes::show` and restoring them, so a new right pane must be added to `RIGHT` |

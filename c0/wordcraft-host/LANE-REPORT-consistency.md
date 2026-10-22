@@ -26,7 +26,7 @@ revision/dirty change). Other formats are still refused.
 
 ## Commits (on c0/main)
 
-See `git log`: `feat(c0doc)` for the modes, dock and PDF, `test(c0doc)` for `tests/c0_toolmodes.rs`, `docs(c0doc)` for this report, README and PATCH-DEBT. An earlier `wip` commit holds the unbuilt first draft.
+Three commits on c0/main: `wip` (unbuilt first draft), `test(c0doc)` for `tests/c0_toolmodes.rs`, `feat(c0doc)` for docs, README, PATCH-DEBT, smoke script and this report.
 
 ## Tests (all under `smoac-slot run heavy 2`, CARGO_BUILD_JOBS=2)
 

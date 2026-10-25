@@ -365,3 +365,119 @@ fn open_and_new_supersede_an_older_open_picker_request() {
     assert!(!pending.load(std::sync::atomic::Ordering::Relaxed));
     assert_eq!(ok(&mut app, &ctx, "c0.inspect", json!({}))["fileDialog"], false);
 }
+
+const PNG_1X1: &str = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
+fn body_text(app: &WordApp) -> String {
+    app.session.doc.plain_text(StoryRef::Body)
+}
+
+#[test]
+fn selection_reads_caret_and_text() {
+    let (mut app, ctx) = (app(), egui::Context::default());
+    app.execute("caret.set", json!({"pos": wordcraft_doc::Pos::body(1, 3)})).unwrap();
+    let rev = app.session.rev();
+    let r = ok(&mut app, &ctx, "c0.selection", json!({}));
+    assert_eq!(r["kind"], "caret");
+    assert_eq!(r["paragraph"], "Second");
+    assert!(r["documentTitle"].is_string());
+    assert_eq!(r["wordCount"], 3);
+    assert!(r.get("text").is_none());
+    let sel = wordcraft_engine::Selection { anchor: wordcraft_doc::Pos::body(0, 2), focus: wordcraft_doc::Pos::body(1, 3) };
+    app.session.sel = sel;
+    let r = ok(&mut app, &ctx, "c0.selection", json!({}));
+    assert_eq!(r["kind"], "text");
+    assert_eq!(r["text"], "rst\nSec");
+    assert_eq!((r["start"].as_u64(), r["end"].as_u64()), (Some(2), Some(9)));
+    assert_eq!(r["paragraph"], "Second");
+    assert_eq!(r["wordCount"], 3);
+    assert_eq!(app.session.rev(), rev, "reading the selection changes nothing");
+}
+
+#[test]
+fn place_text_modes_are_one_undo_step() {
+    let ctx = egui::Context::default();
+    for (mode, select, expected) in [
+        ("replace", true, "First\nXY\nZ\nThird"),
+        ("insert", false, "First\nSeAB\nCccond\nThird"),
+        ("after", false, "First\nSecond\nAB\nCD\nThird"),
+    ] {
+        let mut app = app();
+        let sel = if select {
+            wordcraft_engine::Selection { anchor: wordcraft_doc::Pos::body(1, 0), focus: wordcraft_doc::Pos::body(1, 6) }
+        } else {
+            wordcraft_engine::Selection::caret(wordcraft_doc::Pos::body(1, 2))
+        };
+        app.session.sel = sel;
+        let text = match mode {
+            "replace" => "XY\nZ",
+            "insert" => "AB\nCc",
+            _ => "AB\n\n\nCD",
+        };
+        let before = body_text(&app);
+        let depth = app.session.undo_depth();
+        let r = ok(&mut app, &ctx, "c0.place", json!({"text": text, "mode": mode}));
+        assert_eq!(r["placed"], "text");
+        assert_eq!(r["mode"], mode);
+        assert_eq!(body_text(&app), expected, "{mode}");
+        assert!(app.session.dirty);
+        assert_eq!(app.session.undo_depth(), depth + 1, "{mode}: one undo step");
+        assert!(app.session.undo());
+        assert_eq!(body_text(&app), before, "{mode}: one Ctrl+Z removes all of it");
+    }
+}
+
+#[test]
+fn place_replace_without_selection_inserts() {
+    let (mut app, ctx) = (app(), egui::Context::default());
+    app.execute("caret.set", json!({"pos": wordcraft_doc::Pos::body(0, 5)})).unwrap();
+    let r = ok(&mut app, &ctx, "c0.place", json!({"text": "!"}));
+    assert_eq!((r["mode"].as_str(), r["requestedMode"].as_str()), (Some("insert"), Some("replace")));
+    assert_eq!(body_text(&app), "First!\nSecond\nThird");
+}
+
+#[test]
+fn place_pictures_png_and_jpeg() {
+    let (mut app, ctx) = (app(), egui::Context::default());
+    app.execute("caret.set", json!({"pos": wordcraft_doc::Pos::body(2, 0)})).unwrap();
+    let depth = app.session.undo_depth();
+    let r = ok(&mut app, &ctx, "c0.place", json!({"png": PNG_1X1, "name": "dot", "widthPx": 32}));
+    assert_eq!(r["placed"], "image");
+    assert_eq!(app.session.undo_depth(), depth + 1);
+    assert!(app.session.dirty);
+    assert!(format!("{:?}", app.session.doc.para_at(&wordcraft_doc::Pos::body(2, 0)).unwrap()).contains("Image"));
+    assert!(app.session.undo());
+    assert_eq!(body_text(&app), "First\nSecond\nThird");
+    assert_eq!(app.session.undo_depth(), depth);
+    // A JPEG field must hold a JPEG.
+    assert_eq!(call(&mut app, &ctx, "c0.place", json!({"jpeg": PNG_1X1}))["ok"], false);
+}
+
+#[test]
+fn place_and_selection_refuse_bad_params_without_panicking() {
+    let (mut app, ctx) = (app(), egui::Context::default());
+    let rev = app.session.rev();
+    let big = STANDARD.encode(vec![0x89u8; 41 * 1024 * 1024]);
+    for params in [
+        json!({}),
+        json!({"text": ""}),
+        json!({"text": "   "}),
+        json!({"text": 5}),
+        json!({"text": "a", "mode": "sideways"}),
+        json!({"text": "a", "png": PNG_1X1}),
+        json!({"png": 5}),
+        json!({"png": "***not base64***"}),
+        json!({"png": STANDARD.encode(b"plain text, not a picture")}),
+        json!({"png": PNG_1X1, "widthPx": -3}),
+        json!({"png": PNG_1X1, "widthPx": "wide"}),
+        json!({"png": big}),
+    ] {
+        let r = call(&mut app, &ctx, "c0.place", params.clone());
+        assert_eq!(r["ok"], false, "{params:.80}");
+        assert!(!r["error"].as_str().unwrap().is_empty());
+    }
+    assert_eq!(call(&mut app, &ctx, "c0.place", json!(7))["ok"], false);
+    assert_eq!(app.session.rev(), rev, "a refused request leaves the document alone");
+    assert!(!app.session.can_undo());
+    assert!(c0_host::METHODS.contains(&"c0.selection") && c0_host::METHODS.contains(&"c0.place"));
+}

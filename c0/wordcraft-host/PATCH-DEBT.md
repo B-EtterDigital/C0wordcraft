@@ -34,7 +34,7 @@ roadmap or Word-parity score is changed: this integration adds an embedding tran
 
 - `c0/wordcraft-host/`: the page, build configuration and handback documentation.
 - `apps/wordcraft-web/src/page_control.rs` and `page_control/{bridge,files}.rs`.
-- `crates/ui-egui/src/c0_host.rs` and `c0_host/c0_{files,panels,chrome}.rs`.
+- `crates/ui-egui/src/c0_host.rs` and `c0_host/c0_{files,panels,chrome,generative}.rs` (`c0.selection`, `c0.place`; no upstream line added).
 - `crates/ui-egui/src/theme/host.rs`.
 - `crates/ui-egui/tests/c0_{host_contract,chrome,control_passes,toolmodes}.rs`.
 

@@ -38,7 +38,7 @@ pub fn parse(text: &str) -> Result<(String, Value), String> {
 
 pub fn reads_only(method: &str, params: &Value) -> bool {
     match method {
-        "ui.inspect" | "document.inspect" | "ui.parity" | "engine.commands" | "c0.inspect" | "c0.documentBytes" => true,
+        "ui.inspect" | "document.inspect" | "ui.parity" | "engine.commands" | "c0.inspect" | "c0.documentBytes" | "c0.selection" => true,
         "engine.execute" | "command" => params
             .get("command")
             .or_else(|| params.get("id"))
@@ -85,10 +85,10 @@ mod tests {
 
     #[test]
     fn read_requests_do_not_ask_for_presentation() {
-        for method in ["c0.inspect", "c0.documentBytes", "ui.inspect", "document.inspect", "engine.commands"] {
+        for method in ["c0.inspect", "c0.documentBytes", "c0.selection", "ui.inspect", "document.inspect", "engine.commands"] {
             assert!(reads_only(method, &json!({})), "{method}");
         }
-        for method in ["c0.goToBlock", "c0.openFile", "c0.newDocument", "c0.cancelFileDialog", "c0.set", "ui.screenshot", "unknown"] {
+        for method in ["c0.goToBlock", "c0.openFile", "c0.newDocument", "c0.cancelFileDialog", "c0.set", "c0.place", "ui.screenshot", "unknown"] {
             assert!(!reads_only(method, &json!({})), "{method}");
         }
         assert!(reads_only("engine.execute", &json!({"command":"document.inspect"})));

@@ -61,6 +61,8 @@ body, not page numbers, and can change after edits. Refresh the outline when `re
 | Request | Params | `result` |
 |---|---|---|
 | `c0.inspect` | `{}` | `{title, dirty, revision, pages, words, canUndo, canRedo, outline, panes, ribbonCollapsed, startScreen, theme, titleBar, communityLinks, fileDialog}` |
+| `c0.selection` | `{}` | `{kind:"text",text,start,end,paragraph,documentTitle,wordCount}` with a selection (`start`/`end` are character offsets in the body text, paragraphs joined by a line break; null outside the body), `{kind:"caret",paragraph,documentTitle,wordCount}` without; read only |
+| `c0.place` | `{text, mode:"replace"\|"insert"\|"after"}` or `{png\|jpeg: base64, name?, widthPx?}` | `{placed:"text",mode,requestedMode,chars,paragraphs,revision}` or `{placed:"image",name,bytes,widthPx,revision}`; one undo step, marks the document dirty; a picture over 40 MB, bad base64 or an unknown mode answers `{ok:false,error}` |
 | `c0.goToBlock` | `{block}` | `{block}`; moves the caret to that body paragraph or a table's first paragraph, focuses the page and uses the Navigation pane's scroll policy |
 | `c0.documentBytes` | `{format?: "docx"\|"pdf"}` | `{name, format, bytes, revision}`; a base64 snapshot using File > Save's writer for that format (DOCX with export options and document password; PDF from the engine's own PDF writer, never encrypted) |
 | `c0.openFile` | `{name, bytes}` | The normal `file.open` result, normally `{path, paragraphs, words, encrypted}`, or `{pending:"saveChanges"}` |

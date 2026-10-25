@@ -2,6 +2,7 @@
 
 pub(crate) mod c0_chrome;
 mod c0_files;
+mod c0_generative;
 mod c0_panels;
 pub use c0_files::begin_picker;
 pub(crate) use c0_chrome as chrome;
@@ -14,7 +15,7 @@ use crate::{WordApp, control::Outcome};
 /// Maximum decoded file size, also bounded by the page's total JSON request limit.
 pub const MAX_FILE_BYTES: usize = 72 * 1024 * 1024;
 pub const MAX_REQUEST_BYTES: usize = 96 * 1024 * 1024;
-pub const METHODS: &[&str] = &["c0.inspect", "c0.goToBlock", "c0.documentBytes", "c0.openFile", "c0.newDocument", "c0.cancelFileDialog", "c0.set"];
+pub const METHODS: &[&str] = &["c0.inspect", "c0.goToBlock", "c0.documentBytes", "c0.openFile", "c0.newDocument", "c0.cancelFileDialog", "c0.set", "c0.selection", "c0.place"];
 
 pub fn default_on() -> bool {
     true
@@ -34,7 +35,7 @@ pub(crate) fn about_community(ui: &mut egui::Ui, enabled: bool) {
 /// The host's only arm in the existing control dispatcher.
 pub fn handle(app: &mut WordApp, ctx: &egui::Context, method: &str, params: &Value) -> Outcome {
     let result = dispatch(app, ctx, method, params);
-    if result.is_ok() && !matches!(method, "c0.inspect" | "c0.documentBytes") {
+    if result.is_ok() && !matches!(method, "c0.inspect" | "c0.documentBytes" | "c0.selection") {
         ctx.request_repaint();
     }
     Outcome::Done(match result {
@@ -55,6 +56,8 @@ fn dispatch(app: &mut WordApp, ctx: &egui::Context, method: &str, params: &Value
         "c0.newDocument" => c0_files::new_document(app, ctx, params),
         "c0.cancelFileDialog" => Ok(c0_files::cancel(app, ctx)),
         "c0.set" => c0_panels::set(app, ctx, params),
+        "c0.selection" => c0_generative::selection(app),
+        "c0.place" => c0_generative::place(app, params),
         _ => Err(format!("unknown host method {method:?}")),
     }
 }

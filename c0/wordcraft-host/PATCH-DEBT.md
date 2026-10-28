@@ -3,27 +3,34 @@
 All substantive host code lives in new files. This table counts every modified upstream file,
 including replacement lines, brace/indentation changes and Cargo's dependency bookkeeping.
 The `Lines` column is the added column of
-`git diff --numstat --diff-filter=M main HEAD -- . ':!c0'` on `c0/main`.
-It is not a net line count. New files and everything under `c0/` are excluded.
+`git diff --numstat --diff-filter=M <upstream> HEAD -- . ':!c0'`, where `<upstream>` is the upstream
+commit c0/main was last merged with (d522bfd8b191 since the 20261028 pull). It is not a net line count.
+New files and everything under `c0/` are excluded.
 
 | File | Lines | What | Why | Offered upstream |
 |---|---|---|---|---|
-| `Cargo.lock` | 1 | Register the existing workspace base64 dependency for ui-egui | Keep locked builds reproducible | Not yet |
+| `Cargo.lock` | 1 | Register the workspace base64 dependency for ui-egui (cargo names it `base64 0.23.1`, two versions are in the graph) | Keep locked builds reproducible | Not yet |
 | `apps/wordcraft-web/Cargo.toml` | 3 | Default-off `page-control` feature enables rfd's file-handle-inner accessor; existing serde_json reused | Build the existing binary as an embeddable guest with bounded picker reads | Not yet (generic feature hook) |
 | `apps/wordcraft-web/src/main.rs` | 2 | Declare `page_control` for wasm and native tests when the feature is enabled | Keep native feature tests compiled (K-41) | Not yet |
 | `apps/wordcraft-web/src/web.rs` | 7 | Name/pass the WebRunner (4 added, 1 replaced); attach the bridge (2); expose the existing picker file-count cap to the page picker (1 replaced) | Answer requests without presentation and preserve the upstream count limit | Not yet (generic attachment seams) |
 | `crates/ui-egui/Cargo.toml` | 1 | Existing workspace base64 dependency | Strict file payload validation in the host module | Not yet |
-| `crates/ui-egui/src/lib.rs` | 14 | Declare `c0_host` (1); two default-true, non-persisted UiState fields (5), their defaults (2), UI command helper seam (3), allow those commands with no document (2); the side-pane call goes through the host dock wrapper (1 replaced) | Host title/community switches in the existing state and command path | Not yet (generic embeddability switches/seam) |
-| `crates/ui-egui/src/control.rs` | 1 | One `c0.*` dispatch arm | All host requests use the real control queue | Not yet (fork namespace) |
-| `crates/ui-egui/src/chrome.rs` | 4 | Return when the title row is hidden (3); gate the Discord pill (1 replaced) | The host owns its title and community chrome | Not yet (generic switches) |
+| `crates/ui-egui/src/app/commands.rs` | 5 | `ui_command` seam (3, moved from `lib.rs`); allow `ui.titleBar` and `ui.communityLinks` with no document (2, moved from `lib.rs`) | Host title/community switches through the existing command path | Not yet (generic embeddability switches/seam) |
+| `crates/ui-egui/src/app/frame.rs` | 1 | The side-pane call goes through the host dock wrapper (1 replaced; moved from `lib.rs`) | Folded right dock in the host | Not yet (generic seam) |
 | `crates/ui-egui/src/backstage.rs` | 3 | Skip the existing Discord footer entry when community links are hidden | Keep About while suppressing promotion | Not yet (generic switch) |
-| `crates/ui-egui/src/ribbon.rs` | 12 | Guard the existing Help > Community Discord button (1 replaced, 2 braces); web build only: drop the Zotero tab (1 replaced) and the Home > Voice group with Dictate (comment, guard, brace, 3 re-indented) | Hide the entry without changing the Help tab; neither the Zotero desktop link nor dictation works in a browser | Not yet (the web-build guards are offerable as is) |
+| `crates/ui-egui/src/chrome.rs` | 4 | Return when the title row is hidden (3); gate the Discord pill (1 replaced) | The host owns its title and community chrome | Not yet (generic switches) |
+| `crates/ui-egui/src/control/handler.rs` | 1 | One `c0.*` dispatch arm (moved from `control.rs` when upstream split it into a module) | All host requests use the real control queue | Not yet (fork namespace) |
+| `crates/ui-egui/src/dialogs/dispatch.rs` | 1 | Delegate the existing promotional About block to the host helper (1 replaced, 7 removed; moved from `dialogs.rs`) | Retain WordCraft, authors and license while hiding promotion | Not yet (generic switch) |
+| `crates/ui-egui/src/lib.rs` | 8 | Declare `c0_host` (1); two default-true, non-persisted UiState fields (5), their defaults (2) | Host title/community switches in the existing state | Not yet (generic embeddability switches) |
+| `crates/ui-egui/src/ribbon.rs` | 3 | Hide the Zotero tab on the web build (1 replaced); the ribbon body is drawn in the host's float wrapper (1 added, 1 replaced) | Neither the Zotero desktop link works in a browser; the host can float the ribbon | Not yet (web-build guard is offerable as is) |
+| `crates/ui-egui/src/ribbon/home.rs` | 6 | Voice group (Dictate) guarded off on the web build (comment, guard, brace, 3 re-indented) | No microphone path in the web build | Not yet (web-build guard is offerable as is) |
+| `crates/ui-egui/src/ribbon/review.rs` | 3 | Guard the existing Help > Community Discord button (1 replaced, 2 braces) | Hide the entry without changing the Help tab | Not yet (generic switch) |
 | `crates/ui-egui/src/ribbon_fit.rs` | 1 | The fit plan comes from the host helper (1 replaced; identical result at the default) | Compact-row tool mode forces every group to its compact level | Not yet (generic switch) |
-| `crates/ui-egui/src/dialogs.rs` | 1 | Delegate the existing promotional About block to the new host helper | Retain WordCraft, authors and license while hiding promotion; avoid re-indentation debt | Not yet (generic switch) |
 | `crates/ui-egui/src/theme.rs` | 4 | Declare `theme::host` (2 including spacing), resolve the tokens at the single getter (1 replaced), reapply host widget visuals when upstream reapplies appearance (1) | Context-local palette overrides survive every frame and theme change | Not yet (generic theme seam) |
+| `crates/ui-egui/src/window_ui.rs` | 2 | Two app-wide UiState fields listed in the exhaustive destructure (`title_bar: _`, `community_links: _`) | Forced: upstream destructures `UiState` exhaustively, so every new field must be named there | Not yet (forced by upstream's exhaustive pattern) |
 
-Total: 54 added lines in 13 modified upstream files, including replacements.
-Ratchet: 54
+Total: 56 added lines in 18 modified upstream files, including replacements.
+Ratchet: 56 (54 before the 20261028 pull, plus the 2 `window_ui.rs` lines forced by upstream's
+exhaustive `UiState` destructure; every other line moved with its upstream code, unchanged in count).
 
 The About helper reduces the inherited patch by eight added lines; the lockfile adds one.
 
@@ -47,14 +54,15 @@ roadmap or Word-parity score is changed: this integration adds an embedding tran
 | `c0_host` | `ControlRequest` and `WordApp::with_control`; `logic` drains requests in order | Every host request goes through `control::handle`; unpainted-pass tests use the real queue |
 | `c0_host` | Body block indices, resolved paragraph styles, zero-based outline levels, Title style and `Session::rev()` | Outline, revision, hostile block and navigation tests |
 | `c0_host` | `caret.set`, `nav_to_caret`, `scroll_to_caret` and `want_focus` | Same policy as the Navigation pane; caret/scroll contract test |
-| `c0_host/c0_files.rs` | `WordApp::run` and `ui.saveChanges` retain the normal unsaved-changes lifecycle for file.new/file.open, including byte imports | Cancel/Don't Save replacement tests, import format tests and native engine coverage |
+| `c0_host/c0_files.rs` | Upstream opens a file or new document beside unsaved work and only `file.close` is in `discards_document`; the host's Save / Don't Save / Cancel prompt is raised in c0 code (`save_changes_first`) | `open_and_new_preserve_unsaved_work_until_normal_prompt_is_answered` (c0_host_contract) |
 | `c0_host/c0_files.rs` | `io::save_bytes_with`, `cmd::file::export_options`, Session password and immutable committed document | Read-only snapshot/reopen and encrypted snapshot tests |
 | `page_control/files.rs` | Services inbox/open_async, upstream file filter registry and file count cap; an atomic pending flag makes late chooser answers inert | Native cancellation token test; wasm feature build |
 | `c0_host/c0_panels.rs` | Existing view commands, ui.startScreen startup preference and toggle-only ui.collapseRibbon | Per-key report/idempotence tests and no-document mount test |
 | `theme/host.rs` | Scalar Color32 token fields and parent's widget visuals derivation; WordCraft currently has no radius tokens | Palette apply/report/clear tests and wasm compile; removed token fields fail to compile |
 | Chrome switches | All four promotional surfaces and ui.discord's latent Help KeyTip; license/authorship is separate from the promotional block | Rendered title-bar, Backstage, Help and About text tests, plus direct-command/KeyTip coverage |
+| `c0_host/c0_chrome.rs` | `ribbon::show` panel call, `ribbon_fit::begin` plan, `panes::show` right-hand panels, `WordApp::session.view` pane flags and `restrict.open` | Rendered tests per mode; the folded dock hides the right panes by clearing their flags around `panes::show` and restoring them, so a new right pane must be added to `RIGHT` |
+| `c0_host/c0_chrome.rs` | Upstream now docks each task pane left, right or floating (`ui.paneDock`, `pane_places`); `RIGHT` is a fixed list of six right-edge flags | Not yet tested against a left- or floating-docked pane. Navigation, Clipboard, FormatShape and SmartArt Text are not folded at all |
 
 The optional page picker tracks only open-picker requests. A native browser-owned chooser cannot
 be closed by the page; cancelling its request prevents any later answer from importing a file.
 Browser save tickets and the Save Changes prompt keep their existing lifecycle.
-| `c0_host/c0_chrome.rs` | `ribbon::show` panel call, `ribbon_fit::begin` plan, `panes::show` right-hand panels, `WordApp::session.view` pane flags and `restrict.open` | Rendered tests per mode; the folded dock hides the right panes by clearing their flags around `panes::show` and restoring them, so a new right pane must be added to `RIGHT` |

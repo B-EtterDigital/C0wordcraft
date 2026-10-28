@@ -19,7 +19,7 @@ impl Report {
 }
 
 fn store() -> egui::Id {
-    egui::Id::new("wordcraft-theme-host")
+    egui::Id::unique("wordcraft-theme-host")
 }
 
 pub fn current(ctx: &egui::Context) -> Option<Arc<Value>> {

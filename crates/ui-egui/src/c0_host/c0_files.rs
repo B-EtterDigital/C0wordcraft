@@ -48,9 +48,24 @@ pub(super) fn open(app: &mut WordApp, ctx: &egui::Context, params: &Value) -> Re
     }
     // This answer supersedes a picker request, including a late native chooser result.
     let _ = cancel(app, ctx);
+    if let Some(pending) = save_changes_first(app, "file.open", json!({"path": name, "data": text})) {
+        return Ok(pending);
+    }
     let result = app.run("file.open", json!({"path": name, "data": text}))?;
     app.ui.backstage = false;
     Ok(result)
+}
+
+/// Upstream opens a file or a new document beside unsaved work rather than asking. The host's
+/// contract is to ask Save / Don't Save / Cancel first and run `then` once answered, so the prompt
+/// `run` would have raised for a discarding command is raised here.
+fn save_changes_first(app: &mut WordApp, then: &str, params: Value) -> Option<Value> {
+    if !(app.session.dirty || app.save_unconfirmed()) {
+        return None;
+    }
+    let name = app.session.path.as_ref().and_then(|p| p.file_name()).map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| app.title_stem());
+    app.dialog = Some(crate::dialogs::Dialog::SaveChanges { name, then: then.into(), params, document: app.session.document_id(), message: String::new() });
+    Some(json!({"pending": "saveChanges"}))
 }
 
 pub(super) fn new_document(app: &mut WordApp, ctx: &egui::Context, params: &Value) -> Result<Value, String> {
@@ -59,6 +74,9 @@ pub(super) fn new_document(app: &mut WordApp, ctx: &egui::Context, params: &Valu
     }
     // The existing command owns template names and defaults, including future additions.
     let _ = cancel(app, ctx);
+    if let Some(pending) = save_changes_first(app, "file.new", params.clone()) {
+        return Ok(pending);
+    }
     let result = app.run("file.new", params.clone())?;
     app.ui.backstage = false;
     Ok(result)
@@ -84,7 +102,7 @@ pub fn begin_picker(ctx: &egui::Context) -> std::sync::Arc<std::sync::atomic::At
 }
 
 fn picker_id() -> egui::Id {
-    egui::Id::new("wordcraft-host-file-picker")
+    egui::Id::unique("wordcraft-host-file-picker")
 }
 
 pub(super) fn picker_pending(ctx: &egui::Context) -> bool {

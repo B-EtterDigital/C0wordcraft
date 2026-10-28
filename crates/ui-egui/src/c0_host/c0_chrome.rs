@@ -33,7 +33,7 @@ pub(crate) struct Chrome {
 }
 
 fn state_id() -> Id {
-    Id::new("c0_wordcraft_chrome")
+    Id::unique("c0_wordcraft_chrome")
 }
 
 pub(crate) fn get(ctx: &Context) -> Chrome {
@@ -83,7 +83,7 @@ pub(crate) fn float(ui: &Ui) -> Option<Ui> {
     let room = (free.size() - size).max(Vec2::ZERO);
     let [dx, dy] = state.offset.unwrap_or([EDGE, EDGE]);
     let at = free.min + vec2(dx.clamp(0.0, room.x), dy.clamp(0.0, room.y));
-    let area = egui::Area::new(Id::new("c0_ribbon_float")).order(Order::Middle).fixed_pos(at).show(&ctx, |area| {
+    let area = egui::Area::new(Id::unique("c0_ribbon_float")).order(Order::Middle).fixed_pos(at).show(&ctx, |area| {
         let (grip, drag) = area.allocate_exact_size(vec2(size.x, GRIP_H), Sense::drag());
         let top = CornerRadius { nw: 6, ne: 6, sw: 0, se: 0 };
         area.painter().rect(grip, top, t.ribbon, Stroke::new(1.0, t.border), egui::StrokeKind::Inside);

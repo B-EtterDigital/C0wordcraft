@@ -162,4 +162,4 @@ Heuristic: string-literal ids present in upstream and absent from c0/main (grep 
 - The wasm page build (`trunk build --release`) was not run. The size cap (46137344 bytes) cannot be
   checked until it is.
 
-LANE-DONE wordcraft HEADSHA
+LANE-DONE wordcraft ad9094fbc7f9d7a262d4ca46c6d5d4f882839666

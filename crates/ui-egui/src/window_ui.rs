@@ -247,6 +247,8 @@ impl WordApp {
             // running.
             ribbon_collapsed: _,
             quick_access_toolbar: _,
+            title_bar: _,
+            community_links: _,
             recent: _,
             recent_symbols: _,
             recent_colors: _,

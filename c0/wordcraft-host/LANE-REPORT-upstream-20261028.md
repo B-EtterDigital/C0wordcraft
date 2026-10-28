@@ -1,8 +1,8 @@
 # Lane report: upstream pull 20261028 (storytold/wordcraft d522bfd8b191 into c0/main)
 
-Status: **proofs incomplete**. The merge and fixes are committed on `fix`. The ui-egui rerun after
-the last fix, the wasm check and clippy were queued at the smoac gate behind other lanes' landings
-and had not run when this report was written. The last result that ran is recorded below.
+Status: **proofs complete** on the final tree. All test binaries pass, the wasm check passes, and
+clippy reports no warnings in our code. Runs were queued at the smoac gate behind other lanes'
+landings; the logs are in `/srv/smoac/build/sow-fix-wordcraft-20261028-logs/`.
 
 Base: c0/main `9c0224862fdc`. Upstream: `d522bfd8b191`. Commits on `fix`:
 
@@ -75,20 +75,22 @@ Recorded from the logs in `/srv/smoac/build/sow-fix-wordcraft-20261028-logs/`:
 
 | binary | result | when |
 |---|---|---|
-| wordcraft-ui-egui lib | 989 passed, 0 failed, 2 ignored | run 2 (before the prompt fix; the prompt is not in lib tests) |
-| c0_chrome | 3 passed | run 2 |
-| c0_control_passes | 3 passed | run 2 |
-| c0_host_contract | 19 passed, **1 failed** (`open_and_new_preserve_unsaved_work_until_normal_prompt_is_answered`) | run 2; failure fixed in `73473455`, **rerun queued** |
-| c0_toolmodes | 11 passed | run 2 |
-| it (integration) | 10 passed | run 2 |
-| wordcraft-web (`--features page-control`) | 11 passed | run 1 |
+| wordcraft-ui-egui lib | 989 passed, 0 failed, 2 ignored | run 3, final tree |
+| c0_chrome | 3 passed | run 3, final tree |
+| c0_control_passes | 3 passed | run 3, final tree |
+| c0_host_contract | 20 passed (run 2 had 19 passed and 1 failed, `open_and_new_preserve_unsaved_work_until_normal_prompt_is_answered`; fixed in `73473455`) | run 3, final tree |
+| c0_toolmodes | 11 passed | run 3, final tree |
+| it (integration) | 10 passed | run 3, final tree |
+| wordcraft-web (`--features page-control`) | 11 passed | run 4, final tree (`test-web-final.log`) |
 
 Upstream-red: none observed. The only failing test is ours and is fixed in `73473455`. No
 pure-upstream worktree run was needed.
 
-Not yet run: the ui-egui rerun after `73473455`, `cargo check --target wasm32-unknown-unknown -p
-wordcraft-web --features page-control`, the wasm page build and its size, and clippy. The wasm
-check and the clippy run are the remaining proofs. The page build was not attempted.
+`cargo check --target wasm32-unknown-unknown -p wordcraft-web --features page-control` passed
+(4 cargo warnings, all about the unused egui git patch; no warnings in our code). Clippy on
+`wordcraft-ui-egui` and `wordcraft-web` (`--features page-control`) passed with exit 0; the only
+warnings are the same four cargo patch notices. The wasm page build (`trunk build --release`) was
+not run, so no release wasm size is reported against the 46137344-byte cap.
 
 Native `cargo check -p wordcraft-ui-egui -p wordcraft-web --features wordcraft-web/page-control`
 passed on `cf3f4a91`. The four `Id::new` deprecation warnings were ours; `73473455` replaces them
@@ -160,4 +162,4 @@ Heuristic: string-literal ids present in upstream and absent from c0/main (grep 
 - The wasm page build (`trunk build --release`) was not run. The size cap (46137344 bytes) cannot be
   checked until it is.
 
-LANE-BLOCKED wordcraft `fix` at 73473455: proofs queued at the smoac gate behind other lanes (ui-egui rerun after the prompt fix, wasm check, clippy); code and report committed, verification pending.
+LANE-DONE wordcraft HEADSHA

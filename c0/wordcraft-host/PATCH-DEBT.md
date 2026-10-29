@@ -19,7 +19,7 @@ New files and everything under `c0/` are excluded.
 | `crates/ui-egui/src/backstage.rs` | 3 | Skip the existing Discord footer entry when community links are hidden | Keep About while suppressing promotion | Not yet (generic switch) |
 | `crates/ui-egui/src/chrome.rs` | 4 | Return when the title row is hidden (3); gate the Discord pill (1 replaced) | The host owns its title and community chrome | Not yet (generic switches) |
 | `crates/ui-egui/src/control/handler.rs` | 1 | One `c0.*` dispatch arm (moved from `control.rs` when upstream split it into a module) | All host requests use the real control queue | Not yet (fork namespace) |
-| `crates/ui-egui/src/dialogs/dispatch.rs` | 1 | Delegate the existing promotional About block to the host helper (1 replaced, 7 removed; moved from `dialogs.rs`) | Retain WordCraft, authors and license while hiding promotion | Not yet (generic switch) |
+| `crates/ui-egui/src/dialogs/dispatch.rs` | 3 | Delegate the existing promotional About block to the host helper (1 replaced, 5 removed; moved from `dialogs.rs`), and pass the community-links switch into upstream's new `about_dialog` (call site and signature, 2) | Retain WordCraft, authors and license while hiding promotion | Not yet (generic switch) |
 | `crates/ui-egui/src/lib.rs` | 8 | Declare `c0_host` (1); two default-true, non-persisted UiState fields (5), their defaults (2) | Host title/community switches in the existing state | Not yet (generic embeddability switches) |
 | `crates/ui-egui/src/ribbon.rs` | 3 | Hide the Zotero tab on the web build (1 replaced); the ribbon body is drawn in the host's float wrapper (1 added, 1 replaced) | Neither the Zotero desktop link works in a browser; the host can float the ribbon | Not yet (web-build guard is offerable as is) |
 | `crates/ui-egui/src/ribbon/home.rs` | 6 | Voice group (Dictate) guarded off on the web build (comment, guard, brace, 3 re-indented) | No microphone path in the web build | Not yet (web-build guard is offerable as is) |
@@ -28,8 +28,8 @@ New files and everything under `c0/` are excluded.
 | `crates/ui-egui/src/theme.rs` | 4 | Declare `theme::host` (2 including spacing), resolve the tokens at the single getter (1 replaced), reapply host widget visuals when upstream reapplies appearance (1) | Context-local palette overrides survive every frame and theme change | Not yet (generic theme seam) |
 | `crates/ui-egui/src/window_ui.rs` | 2 | Two app-wide UiState fields listed in the exhaustive destructure (`title_bar: _`, `community_links: _`) | Forced: upstream destructures `UiState` exhaustively, so every new field must be named there | Not yet (forced by upstream's exhaustive pattern) |
 
-Total: 56 added lines in 18 modified upstream files, including replacements.
-Ratchet: 56 (54 before the 20261028 pull, plus the 2 `window_ui.rs` lines forced by upstream's
+Total: 58 added lines in 18 modified upstream files, including replacements.
+Ratchet: 58 (56 before the 20261030 pull, plus 2 forced when upstream moved the About tab into `about_dialog`, which has no app handle; 54 before the 20261028 pull, plus the 2 `window_ui.rs` lines forced by upstream's
 exhaustive `UiState` destructure; every other line moved with its upstream code, unchanged in count).
 
 The About helper reduces the inherited patch by eight added lines; the lockfile adds one.

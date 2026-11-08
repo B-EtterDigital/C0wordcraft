@@ -23,6 +23,8 @@ mod save_fallback;
 #[cfg(all(feature = "page-control", any(target_arch = "wasm32", test)))]
 mod page_control;
 #[cfg(target_arch = "wasm32")]
+mod api;
+#[cfg(target_arch = "wasm32")]
 mod host;
 #[cfg(target_arch = "wasm32")]
 mod web;
